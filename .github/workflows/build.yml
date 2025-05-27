@@ -5,6 +5,9 @@ on:
     - cron: "0 9/12 * * *"
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs: 
   check_version:
     runs-on: ubuntu-22.04
