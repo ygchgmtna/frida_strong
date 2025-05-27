@@ -29,7 +29,8 @@ jobs:
             const {
               data: { tag_name: ver }
             } = releaseResponse;
-            core.setOutput('FRIDA_VERSION', ver);
+            const fs = require('fs');
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `FRIDA_VERSION=${ver}\n`);
       - name: Check release version
         id: checkReleaseVersion
         uses: actions/github-script@v3.1.0
@@ -46,23 +47,21 @@ jobs:
               const {
                 data: { tag_name: ver }
               } = releaseResponse;
-              if (ver == '${{ steps.pullFridaLatestRelease.outputs.FRIDA_VERSION }}'){
-                  const fs = require('fs');
-                  fs.appendFileSync(process.env.GITHUB_OUTPUT, `ALREADY_RELEASE=1\n`);
-              }
-              else{
-                  const fs = require('fs');
-                  fs.appendFileSync(process.env.GITHUB_OUTPUT, `ALREADY_RELEASE=0\n`);
-
+              const fs = require('fs');
+              if (ver == releaseVersion){
+                fs.appendFileSync(process.env.GITHUB_OUTPUT, `ALREADY_RELEASE=1\n`);
+              } else {
+                fs.appendFileSync(process.env.GITHUB_OUTPUT, `ALREADY_RELEASE=0\n`);
               }
             } catch (e) {
-              if(e.message == 'Not Found'){
-                core.setOutput('ALREADY_RELEASE', '0');
-              }
-              else{
+              if(e.message === 'Not Found'){
+                const fs = require('fs');
+                fs.appendFileSync(process.env.GITHUB_OUTPUT, `ALREADY_RELEASE=0\n`);
+              } else {
                 core.setFailed(e.message);
               }
             }
+
 
 
   create_release:
@@ -166,10 +165,11 @@ jobs:
             const {
               data: { id: releaseId, html_url: htmlUrl, upload_url: uploadUrl }
             } = releaseResponse;
-            core.setOutput('id', releaseId);
-            core.setOutput('html_url', htmlUrl);
-            core.setOutput('upload_url', uploadUrl);
-            core.setOutput('version', releaseVersion);
+            const fs = require('fs');
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `id=${releaseId}\n`);
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `html_url=${htmlUrl}\n`);
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `upload_url=${uploadUrl}\n`);
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `version=${releaseVersion}\n`);
           } catch (e) {
             core.setFailed(e.message);
           }
