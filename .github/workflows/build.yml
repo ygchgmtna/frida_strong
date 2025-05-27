@@ -47,10 +47,13 @@ jobs:
                 data: { tag_name: ver }
               } = releaseResponse;
               if (ver == '${{ steps.pullFridaLatestRelease.outputs.FRIDA_VERSION }}'){
-                  core.setOutput('ALREADY_RELEASE', '1');
+                  const fs = require('fs');
+                  fs.appendFileSync(process.env.GITHUB_OUTPUT, `ALREADY_RELEASE=1\n`);
               }
               else{
-                  core.setOutput('ALREADY_RELEASE', '0');
+                  const fs = require('fs');
+                  fs.appendFileSync(process.env.GITHUB_OUTPUT, `ALREADY_RELEASE=0\n`);
+
               }
             } catch (e) {
               if(e.message == 'Not Found'){
