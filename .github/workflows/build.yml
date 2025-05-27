@@ -15,54 +15,41 @@ jobs:
     outputs:
       FRIDA_VERSION: ${{ steps.pullFridaLatestRelease.outputs.FRIDA_VERSION }}
       ALREADY_RELEASE: ${{ steps.checkReleaseVersion.outputs.ALREADY_RELEASE }}
+
     steps:
       - name: Pull Frida Latest Release
         id: pullFridaLatestRelease
         uses: actions/github-script@v3.1.0
         with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const releaseResponse = await github.repos.getLatestRelease({
-              owner: 'frida',
-              repo: 'frida',
-            })
-            const {
-              data: { tag_name: ver }
-            } = releaseResponse;
-            const fs = require('fs');
-            fs.appendFileSync(process.env.GITHUB_OUTPUT, `FRIDA_VERSION=${ver}\n`);
+            const releaseResponse = await github.repos.getLatestRelease({ owner: 'frida', repo: 'frida' });
+            const ver = releaseResponse.data.tag_name;
+            require('fs').appendFileSync(process.env.GITHUB_OUTPUT, `FRIDA_VERSION=${ver}\n`);
+
       - name: Check release version
         id: checkReleaseVersion
         uses: actions/github-script@v3.1.0
         with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             try {
-              const releaseVersion = '${{ steps.pullFridaLatestRelease.outputs.FRIDA_VERSION }}'
+              const releaseVersion = '${{ steps.pullFridaLatestRelease.outputs.FRIDA_VERSION }}';
               const releaseResponse = await github.repos.getReleaseByTag({
                 owner: '${{ secrets.GIT_OWNER }}',
                 repo: '${{ secrets.GIT_REPO }}',
                 tag: releaseVersion
               });
-              const {
-                data: { tag_name: ver }
-              } = releaseResponse;
+              const ver = releaseResponse.data.tag_name;
               const fs = require('fs');
-              if (ver == releaseVersion){
-                fs.appendFileSync(process.env.GITHUB_OUTPUT, `ALREADY_RELEASE=1\n`);
-              } else {
-                fs.appendFileSync(process.env.GITHUB_OUTPUT, `ALREADY_RELEASE=0\n`);
-              }
+              fs.appendFileSync(process.env.GITHUB_OUTPUT, `ALREADY_RELEASE=${ver === releaseVersion ? 1 : 0}\n`);
             } catch (e) {
-              if(e.message === 'Not Found'){
-                const fs = require('fs');
-                fs.appendFileSync(process.env.GITHUB_OUTPUT, `ALREADY_RELEASE=0\n`);
+              if (e.message === 'Not Found') {
+                require('fs').appendFileSync(process.env.GITHUB_OUTPUT, `ALREADY_RELEASE=0\n`);
               } else {
                 core.setFailed(e.message);
               }
             }
-
-
 
   create_release:
     needs: check_version
